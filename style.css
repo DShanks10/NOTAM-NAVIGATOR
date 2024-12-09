@@ -1,0 +1,12 @@
+header {
+    background-color: #003366;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between; /* Τοποθετεί το λογότυπο δεξιά */
+    align-items: center;
+}
+header img {
+    width: 100px; /* Αύξηση μεγέθους */
+    height: auto;
+}

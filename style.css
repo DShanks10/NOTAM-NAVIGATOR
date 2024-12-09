@@ -10,3 +10,101 @@ header img {
     width: 100px; /* Αύξηση μεγέθους */
     height: auto;
 }
+/* Default CSS (για υπολογιστές) */
+header {
+    background-color: #003366;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+header img {
+    width: 100px;
+    height: auto;
+}
+
+#map {
+    height: 500px;
+    margin-top: 20px;
+}
+
+.controls {
+    margin-bottom: 15px;
+}
+
+.area-list {
+    margin-top: 15px;
+}
+
+footer {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #003366;
+    color: white;
+    text-align: center;
+    font-size: 14px;
+}
+
+footer a {
+    color: #ffcc00;
+    text-decoration: none;
+}
+
+/* Media Query για tablet (μέγιστο πλάτος: 768px) */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column; /* Τα στοιχεία στο header στοιχίζονται κάθετα */
+        text-align: center;
+    }
+
+    header img {
+        margin-bottom: 10px;
+    }
+
+    #map {
+        height: 400px; /* Μικρότερο ύψος για tablet */
+    }
+
+    .controls {
+        font-size: 14px;
+    }
+
+    footer {
+        font-size: 12px; /* Μικρότερο μέγεθος γραμματοσειράς */
+    }
+}
+
+/* Media Query για κινητά (μέγιστο πλάτος: 480px) */
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 18px; /* Μικρότερος τίτλος */
+    }
+
+    #map {
+        height: 300px; /* Μικρότερο ύψος για κινητά */
+    }
+
+    .controls {
+        display: flex;
+        flex-direction: column; /* Τα κουμπιά και τα πεδία στοιχίζονται κάθετα */
+        gap: 10px; /* Απόσταση μεταξύ των στοιχείων */
+        font-size: 12px; /* Μικρότερο μέγεθος γραμματοσειράς */
+    }
+
+    .controls input,
+    .controls textarea,
+    .controls button {
+        width: 100%; /* Πλήρες πλάτος για κινητά */
+    }
+
+    footer {
+        font-size: 10px; /* Ακόμα μικρότερη γραμματοσειρά */
+    }
+}

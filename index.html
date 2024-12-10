@@ -138,12 +138,15 @@
     </div>
 
     <footer>
-        <p>Created by <strong>Evangelos Remis</strong>, AIR TRAFFIC CONTROL OFFICER</p>
-        <p<p>Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></p>
-<p>Powered by <a href="https://leafletjs.com/">Leaflet.js</a></p>
-For feedback, contact: <a href="mailto:notamnavsup@gmail.com">notamnavsup@gmail.com</a></p>
+    <p>Created by <strong>Evangelos Remis</strong>, AIR TRAFFIC CONTROL OFFICER</p>
+    <p>Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a></p>
+    <p>Satellite map © <a href="https://www.esri.com/">Esri</a> contributors</p>
+    <p>Powered by <a href="https://leafletjs.com/">Leaflet.js</a></p>
+    <p><a href="terms.html">Terms of Use</a></p>
+    <p>For feedback, contact: <a href="mailto:notamnavsup@gmail.com">notamnavsup@gmail.com</a></p>
+</footer>
 
-    </footer>
+
 
     <script>
         // Initialize map
@@ -162,10 +165,10 @@ For feedback, contact: <a href="mailto:notamnavsup@gmail.com">notamnavsup@gmail.
                 osmTiles.addTo(map);
             } else if (mapType === 'satellite') {
                 if (!satelliteTiles) {
-                    satelliteTiles = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                        maxZoom: 20
-                    });
+                    satelliteTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com/">Esri</a> contributors'
+});
+
                 }
                 map.removeLayer(osmTiles);
                 satelliteTiles.addTo(map);
@@ -190,33 +193,82 @@ For feedback, contact: <a href="mailto:notamnavsup@gmail.com">notamnavsup@gmail.
 
         // Add Polygon
         function plotPolygon() {
-            const input = document.getElementById('coordinates').value.trim();
-            const name = document.getElementById('polygon-name').value.trim();
+    const input = document.getElementById('coordinates').value.trim();
+    const name = document.getElementById('polygon-name').value.trim();
 
-            try {
-                const coordinates = input.includes('-')
-                    ? input.split('-').map(coord => coord.trim().split(/\s+/).map(dmsToDecimal))
-                    : input.split('\n').map(line => line.trim().split(/\s+/).map(Number));
+    try {
+        // Καθαρισμός και διάσπαση εισόδου
+        const segments = input.split(/\s*-\s*|\n/).map(segment => segment.trim());
 
-                const polygon = L.polygon(coordinates, { color: 'blue' }).addTo(map);
-                areaLayers.push(polygon);
+        // Επεξεργασία κάθε τμήματος (segment)
+        const coordinates = segments.map(segment => {
+            // Έλεγχος αν είναι DMS μορφή (π.χ., 354500N 0234200E)
+            const dmsRegex = /(\d{2,3})(\d{2})(\d{2})?([NSEW])\s+(\d{2,3})(\d{2})(\d{2})?([NSEW])/;
+            const dmsMatch = segment.match(dmsRegex);
 
-                const listItem = document.createElement('li');
-                listItem.textContent = `Polygon: ${name || 'Unnamed Polygon'}`;
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.onclick = () => {
-                    map.removeLayer(polygon);
-                    areaLayers.splice(areaLayers.indexOf(polygon), 1);
-                    listItem.remove();
-                };
-                listItem.appendChild(deleteButton);
-                areaList.appendChild(listItem);
-                map.fitBounds(coordinates);
-            } catch (e) {
-                alert('Error parsing polygon coordinates: ' + e.message);
+            if (dmsMatch) {
+                // Μετατροπή DMS σε δεκαδικές συντεταγμένες
+                const lat = dmsToDecimal(`${dmsMatch[1]}${dmsMatch[2]}${dmsMatch[3] || ''}${dmsMatch[4]}`);
+                const lon = dmsToDecimal(`${dmsMatch[5]}${dmsMatch[6]}${dmsMatch[7] || ''}${dmsMatch[8]}`);
+                return [lat, lon];
             }
+
+            // Έλεγχος αν είναι δεκαδικές συντεταγμένες (π.χ., 37.485479 23.144731)
+            const decimalRegex = /^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$/;
+            if (decimalRegex.test(segment)) {
+                const [lat, lon] = segment.split(/\s+/).map(Number);
+                return [lat, lon];
+            }
+
+            // Εάν δεν ταιριάζει καμία μορφή
+            throw new Error(`Invalid coordinate format: ${segment}`);
+        });
+
+        // Έλεγχος εγκυρότητας συντεταγμένων
+        if (coordinates.some(coord => isNaN(coord[0]) || isNaN(coord[1]))) {
+            throw new Error('Invalid coordinates detected. Please check your input.');
         }
+
+        // Δημιουργία πολυγώνου
+        const polygon = L.polygon(coordinates, { color: 'blue' }).addTo(map);
+        areaLayers.push(polygon);
+
+        // Προσθήκη στη λίστα περιοχών
+        const listItem = document.createElement('li');
+        listItem.textContent = `Polygon: ${name || 'Unnamed Polygon'}`;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => {
+            map.removeLayer(polygon);
+            areaLayers.splice(areaLayers.indexOf(polygon), 1);
+            listItem.remove();
+        };
+        listItem.appendChild(deleteButton);
+        areaList.appendChild(listItem);
+
+        // Προσαρμογή της προβολής του χάρτη
+        map.fitBounds(coordinates);
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+// Συνάρτηση μετατροπής DMS σε δεκαδική μορφή
+function dmsToDecimal(dms) {
+    const regex = /(\d{2,3})(\d{2})(\d{2})?([NSEW])/;
+    const match = dms.match(regex);
+    if (!match) return null;
+
+    const degrees = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const seconds = match[3] ? parseInt(match[3], 10) : 0;
+    const direction = match[4];
+
+    let decimal = degrees + minutes / 60 + seconds / 3600;
+    if (direction === 'S' || direction === 'W') decimal = -decimal;
+    return decimal;
+}
+
 
         // Add Circle
 function plotCircle() {
@@ -327,14 +379,5 @@ function parseCoordinate(input) {
             areaList.innerHTML = '';
         }
     </script>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-R4N1RY18RE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-R4N1RY18RE');
-</script>
-</body>
+    </body>
 </html>
